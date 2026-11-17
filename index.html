@@ -623,9 +623,9 @@ document.querySelectorAll("#rFilter button").forEach(b=>b.onclick=()=>{
   $("tgl").hidden=rMode!=="hari"; $("rBln").hidden=rMode!=="bulan"; $("rThn").hidden=rMode!=="tahun"; $("rRentang").hidden=rMode!=="rentang";
   muatRekap();
 });
-$("btnPegawai").onclick = async ()=>{ if(!sesi || sesi.peran==="owner"){ toast("Jatah porsi hanya untuk pegawai.",true); return; } const idJ="p-"+hariKasir(Date.now())+"-"+auth.currentUser.uid; try{ const s=await db.collection("transaksi").doc(idJ).get(); if(s.exists){ toast("Jatah hari ini sudah diambil. Maksimal 1 porsi per hari.",true); return; } }catch(e){}
+$("btnPegawai").onclick = async ()=>{ if(!sesi || sesi.peran==="owner"){ toast("Jatah porsi hanya untuk pegawai.",true); return; } const idJ="p-"+hariKasir(Date.now()); try{ const s=await db.collection("transaksi").doc(idJ).get(); if(s.exists){ const k=(s.data()||{}).kasir; toast("Jatah hari ini sudah diambil"+(k?" oleh "+k:"")+". Maksimal 1 porsi per hari untuk semua pegawai.",true); return; } }catch(e){}
   const now=Date.now();
-  try{ await simpanTrx({id:"p-"+hariKasir(now)+"-"+auth.currentUser.uid, ts:now, hari:hariKasir(now), jenis:"pegawai", items:{}, porsi:1, harga:0, total:0, metode:"-", bayar:0, kembali:0});
+  try{ await simpanTrx({id:"p-"+hariKasir(now), ts:now, hari:hariKasir(now), jenis:"pegawai", items:{}, porsi:1, harga:0, total:0, metode:"-", bayar:0, kembali:0});
     toast("Porsi pegawai dicatat"); }catch(e){ toast("Gagal mencatat. Coba lagi.",true); }
 };
 
