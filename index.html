@@ -646,6 +646,7 @@ function kirimNtfy(judul, pesan, tag){
   const antre = lsGet(LS_NTFY, []);
   antre.push({topic:NTFY_TOPIC, title:judul, message:pesan, priority:4, tags:[tag], t:Date.now()});
   lsSet(LS_NTFY, antre.slice(-30)); kirimAntreNtfy();
+  antrePush(judul, pesan, tag);
 }
 async function kirimAntreNtfy(){
   if(ntfySibuk) return; ntfySibuk = true;
@@ -662,6 +663,52 @@ async function kirimAntreNtfy(){
   }catch(e){} finally{ ntfySibuk = false; }
 }
 window.addEventListener("online", kirimAntreNtfy);
+
+/* ---------- notif push langsung ke HP pemilik, atas nama aplikasi (lewat pengirim di Cloudflare) ---------- */
+const PUSH_URL = "https://bangjack-notif.ridwanpatty11.workers.dev", LS_PUSH = "bj_push_antre", EMOJI = {moneybag:"💰", memo:"📝", x:"❌"};
+let pushSibuk = false;
+const ub64u = s => { s=s.replace(/-/g,"+").replace(/_/g,"/"); while(s.length%4) s+="="; return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); };
+async function sha1hex(s){ const b=await crypto.subtle.digest("SHA-1",new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+async function daftarPush(minta){
+  if(!sesi || sesi.peran!=="owner" || !("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return false;
+  if(Notification.permission!=="granted"){
+    if(!minta) return false;
+    let r="default"; try{ r = await Notification.requestPermission(); }catch(e){}
+    if(r!=="granted") return false;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if(!sub){
+    const {pub} = await (await fetch(PUSH_URL+"/vapid")).json();
+    sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:ub64u(pub)});
+  }
+  const j = sub.toJSON(), id = "hp-"+(await sha1hex(j.endpoint)).slice(0,20);
+  await db.collection("push").doc(id).set({sub:JSON.stringify(j), uid:auth.currentUser.uid, nama:sesi.nama, ts:Date.now(), perangkat:navigator.userAgent.slice(0,120)});
+  lsSet("bj_push_ok", id);
+  return true;
+}
+function antrePush(judul, pesan, tag){
+  const a = lsGet(LS_PUSH, []);
+  a.push({judul:((EMOJI[tag]||"")+" "+judul).trim(), pesan, t:Date.now()});
+  lsSet(LS_PUSH, a.slice(-30)); kirimAntrePush();
+}
+async function kirimAntrePush(){
+  if(pushSibuk || !auth || !auth.currentUser) return; pushSibuk = true;
+  try{
+    let a = lsGet(LS_PUSH, []);
+    if(!a.length) return;
+    const token = await auth.currentUser.getIdToken();
+    while(a.length){
+      const {t, ...m} = a[0];
+      if(Date.now()-t > 6*3600e3){ a.shift(); lsSet(LS_PUSH, a); continue; }
+      if(Date.now()-t > 60000) m.pesan += ` (jam ${jam(t)})`;
+      const r = await fetch(PUSH_URL+"/kirim", {method:"POST", headers:{"Authorization":"Bearer "+token, "Content-Type":"application/json"}, body:JSON.stringify(m)});
+      if(!r.ok) break;
+      a.shift(); lsSet(LS_PUSH, a);
+    }
+  }catch(e){} finally{ pushSibuk = false; }
+}
+window.addEventListener("online", kirimAntrePush);
 $("btnSimpan").onclick = async ()=>{
   const P = ambilPelanggan(); if(!P.ok) return;
   const t=totalNow(), u = metode==="tunai" ? (uangDiterima()||t) : t;
@@ -794,16 +841,16 @@ function beriNotif(jenis, teks){
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden && sesi) aturTombolNotif(); });
 function aturTombolNotif(){
   const owner = !!(sesi && sesi.peran==="owner"), ada = "Notification" in window;
-  $("btnNotif").hidden = !owner || !ada || Notification.permission==="granted";
+  $("btnNotif").hidden = !owner || !ada || (Notification.permission==="granted" && !!lsGet("bj_push_ok", ""));
   if(ada) $("btnNotif").textContent = Notification.permission==="denied" ? "🔕 Notif diblokir" : "🔔 Aktifkan notif";
 }
 $("btnNotif").onclick = async ()=>{
   bunyi([1]);  // membuka izin suara di browser
   if(!("Notification" in window)) return;
   if(Notification.permission==="denied"){ toast("Notifikasi masih diblokir. Tutup paksa aplikasi lalu buka lagi. Kalau tetap, izinkan di Chrome > Setelan > Setelan situs > Notifikasi.",true); return; }
-  let r="default"; try{ r = await Notification.requestPermission(); }catch(e){}
+  let ok=false; try{ ok = await daftarPush(true); }catch(e){}
   aturTombolNotif();
-  toast(r==="granted" ? "Notifikasi aktif" : "Notifikasi belum diizinkan", r!=="granted");
+  toast(ok ? "Notifikasi HP aktif" : (Notification.permission==="granted" ? "Gagal mendaftarkan HP. Cek internet lalu coba lagi." : "Notifikasi belum diizinkan"), !ok);
 };
 
 /* ---------- rekap ---------- */
@@ -1287,7 +1334,7 @@ if(auth){
       db = fs;
       $("login").hidden = true; $("lPass").value = ""; $("lErr").hidden = true;
       terapkanPeran(); setStatus(); tab("kasir");
-      mulaiPending(); mulaiNotifBayar(); kirimAntreNtfy();
+      mulaiPending(); mulaiNotifBayar(); kirimAntreNtfy(); kirimAntrePush(); daftarPush(false).then(()=>aturTombolNotif()).catch(()=>{});
       toast(`Halo ${sesi.nama}, selamat jualan!`);
     } else {
       sesi = null; db = null;
