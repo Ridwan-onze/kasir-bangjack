@@ -643,10 +643,7 @@ const NTFY_TOPIC = "bangjack-wsle9cykvu45hgtxxv", LS_NTFY = "bj_ntfy_antre";
 let ntfySibuk = false;
 function kirimNtfy(judul, pesan, tag){
   if(!sesi || sesi.peran==="owner") return;   // pemilik tidak perlu notif dari input sendiri
-  const antre = lsGet(LS_NTFY, []);
-  antre.push({topic:NTFY_TOPIC, title:judul, message:pesan, priority:4, tags:[tag], t:Date.now()});
-  lsSet(LS_NTFY, antre.slice(-30)); kirimAntreNtfy();
-  antrePush(judul, pesan, tag);
+  antrePush(judul, pesan, tag);   // sejak 20 Nov notif langsung atas nama aplikasi; ntfy tidak dipakai lagi
 }
 async function kirimAntreNtfy(){
   if(ntfySibuk) return; ntfySibuk = true;
