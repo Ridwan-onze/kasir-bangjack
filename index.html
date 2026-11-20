@@ -637,6 +637,31 @@ function ambilPelanggan(){
   return {ok:true, data:d};
 }
 const idBaru = now => "t"+now+Math.random().toString(36).slice(2,6);
+
+/* ---------- notif ke HP pemilik lewat aplikasi ntfy (muncul walau aplikasi kasir pemilik tertutup) ---------- */
+const NTFY_TOPIC = "bangjack-wsle9cykvu45hgtxxv", LS_NTFY = "bj_ntfy_antre";
+let ntfySibuk = false;
+function kirimNtfy(judul, pesan, tag){
+  if(!sesi || sesi.peran==="owner") return;   // pemilik tidak perlu notif dari input sendiri
+  const antre = lsGet(LS_NTFY, []);
+  antre.push({topic:NTFY_TOPIC, title:judul, message:pesan, priority:4, tags:[tag], t:Date.now()});
+  lsSet(LS_NTFY, antre.slice(-30)); kirimAntreNtfy();
+}
+async function kirimAntreNtfy(){
+  if(ntfySibuk) return; ntfySibuk = true;
+  try{
+    let antre = lsGet(LS_NTFY, []);
+    while(antre.length){
+      const {t, ...isi} = antre[0];
+      if(Date.now()-t > 6*3600e3){ antre.shift(); lsSet(LS_NTFY, antre); continue; }   // terlalu lama, buang
+      if(Date.now()-t > 60000) isi.message += ` (jam ${jam(t)})`;   // terkirim telat karena sinyal
+      const r = await fetch("https://ntfy.sh/", {method:"POST", body:JSON.stringify(isi)});
+      if(!r.ok) break;
+      antre.shift(); lsSet(LS_NTFY, antre);
+    }
+  }catch(e){} finally{ ntfySibuk = false; }
+}
+window.addEventListener("online", kirimAntreNtfy);
 $("btnSimpan").onclick = async ()=>{
   const P = ambilPelanggan(); if(!P.ok) return;
   const t=totalNow(), u = metode==="tunai" ? (uangDiterima()||t) : t;
@@ -657,6 +682,7 @@ $("btnSimpan").onclick = async ()=>{
   }catch(e){ $("btnSimpan").disabled=false; toast("Gagal menyimpan. Cek internet lalu coba lagi.",true); return; }
   $("lembar").hidden=true; bayarCtx=null;
   tampilLunas(t, metode, u-t, P.data);
+  kirimNtfy("Pembayaran masuk", `${oleh} terima ${rp(t)} · ${metode==="qris"?"QRIS":"Tunai"}`, "moneybag");
 };
 $("btnNanti").onclick = async ()=>{
   const P = ambilPelanggan(); if(!P.ok) return;
@@ -669,6 +695,7 @@ $("btnNanti").onclick = async ()=>{
   catch(e){ $("btnNanti").disabled=false; toast("Gagal menyimpan. Cek internet lalu coba lagi.",true); return; }
   $("lembar").hidden=true; bayarCtx=null; keranjang={}; renderMenu();
   toast(`Pesanan ${rp(t)} dicatat · BELUM BAYAR`);
+  kirimNtfy("Pesanan belum bayar", `${sesi?sesi.nama:"Pegawai"} mencatat pesanan ${rp(t)} (belum dibayar)`, "memo");
 };
 
 /* ---------- layar LUNAS ---------- */
@@ -718,7 +745,9 @@ $("pendingList").addEventListener("click",e=>{
 $("kbTidak").onclick=()=>{ $("konfBatal").hidden=true; batalId=null; };
 $("kbYa").onclick=async ()=>{
   const id=batalId; $("konfBatal").hidden=true; batalId=null; if(!id) return;
-  try{ await updateTrx(id,{status:"batal", tsBatal:Date.now(), dibatalkanOleh:sesi?sesi.nama:""}); toast("Pesanan dibatalkan"); }
+  const tb = pendingData.find(x=>x.id===id);
+  try{ await updateTrx(id,{status:"batal", tsBatal:Date.now(), dibatalkanOleh:sesi?sesi.nama:""}); toast("Pesanan dibatalkan");
+    if(tb) kirimNtfy("Pesanan dibatalkan", `${sesi?sesi.nama:"Pegawai"} membatalkan pesanan ${rp(tb.total)} (jam ${jam(tb.ts)})`, "x"); }
   catch(e){ toast("Gagal membatalkan. Coba lagi.",true); }
 };
 
@@ -1258,7 +1287,7 @@ if(auth){
       db = fs;
       $("login").hidden = true; $("lPass").value = ""; $("lErr").hidden = true;
       terapkanPeran(); setStatus(); tab("kasir");
-      mulaiPending(); mulaiNotifBayar();
+      mulaiPending(); mulaiNotifBayar(); kirimAntreNtfy();
       toast(`Halo ${sesi.nama}, selamat jualan!`);
     } else {
       sesi = null; db = null;
