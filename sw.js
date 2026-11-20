@@ -1,5 +1,5 @@
 // Service worker Kasir Bang Jack: simpan tampilan aplikasi supaya tetap bisa dibuka saat sinyal lemah.
-const CACHE = "bangjack-v1";
+const CACHE = "bangjack-v2";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
@@ -12,4 +12,12 @@ self.addEventListener("fetch", e => {
     fetch(req).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res; })
       .catch(() => caches.match(req).then(r => r || caches.match("index.html")))
   );
+});
+// Ketuk notifikasi: buka (atau munculkan) aplikasi kasir.
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(cs => {
+    for (const c of cs) { if ("focus" in c) return c.focus(); }
+    return self.clients.openWindow("./");
+  }));
 });

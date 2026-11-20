@@ -193,6 +193,41 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
 .pw .fld{flex:1;min-width:0}
 .pw button{padding:0 12px;border-radius:12px;border:1.5px solid var(--garis);font-weight:700;font-size:13px;background:var(--krem)}
 .lerr{margin:2px 0 0;color:var(--merah);font-weight:700;font-size:13px}
+.pending{background:#FFF4D6;border:1.5px solid var(--kuning);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.pending h3{margin:0 0 6px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;color:#6b4e00}
+.pd{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px dashed #e3c66f;align-items:center}
+.pd:first-child{border-top:0}
+.pd .kiri{min-width:0;font-size:13px;color:var(--pudar);overflow-wrap:anywhere}
+.pd .kiri b{color:var(--tinta);font-size:15px}
+.pd .tombol{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
+.btn-lunas{background:var(--hijau);color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;font-size:14px}
+.btn-batal-kecil{background:none;color:var(--pudar);font-size:12px;text-decoration:underline;padding:4px 2px}
+.plg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.plg input{width:100%;min-width:0;box-sizing:border-box;font:500 15px var(--f-body);padding:10px 12px;border-radius:12px;border:1.5px solid var(--garis);background:var(--krem);color:var(--tinta)}
+.plg-cat{font-size:12px;color:var(--pudar);margin:-6px 0 0}
+.plg-err{font-size:12px;color:var(--merah);font-weight:600;margin:-6px 0 0}
+.btn-nanti{background:#FFF4D6;border:1.5px solid var(--kuning);border-radius:14px;padding:12px;font-weight:700;color:#6b4e00;width:100%}
+.btn-nanti:disabled{opacity:.5}
+.chip.belum{background:#FFF4D6;border-color:var(--kuning);color:#6b4e00}
+.chip.batal{background:#eee;border-color:#ccc;color:#666}
+.chip.plg-chip{background:#EAF4FF;border-color:#b9d6f5;color:#1d4f86;text-decoration:none}
+.trx.batal-row .kiri,.trx.batal-row b{opacity:.55}
+.lunas{position:fixed;inset:0;z-index:30;background:rgba(18,98,52,.95);display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;cursor:pointer}
+.lunas-in{display:flex;flex-direction:column;align-items:center;gap:6px}
+.lunas .cekbulat{width:96px;height:96px;border-radius:50%;background:#fff;color:var(--hijau);font:800 60px/96px var(--f-display);animation:pop .35s ease-out}
+.lunas b{font:800 46px/1.1 var(--f-display);letter-spacing:3px;margin-top:6px}
+.lunas .lrp{font:800 32px var(--f-display)}
+.lunas .lsub{font-size:16px;font-weight:600}
+.lunas small{opacity:.8;margin-top:14px}
+@keyframes pop{0%{transform:scale(.4)}80%{transform:scale(1.08)}100%{transform:scale(1)}}
+.notif-wrap{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 16px));z-index:25;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.notif{pointer-events:auto;background:var(--tinta);color:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:flex-start;font:600 14px var(--f-body);cursor:pointer;text-align:left;width:100%}
+.notif.bayar{background:var(--hijau)}
+.notif.baru{background:#8a6200}
+.notif span{flex:1}
+.notif small{opacity:.8;white-space:nowrap;font-weight:500}
+.badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:999px;background:var(--kuning);color:var(--tinta);font-size:11px;font-weight:800;margin-left:6px;line-height:18px;text-align:center}
+@media (prefers-reduced-motion:reduce){.lunas .cekbulat{animation:none}}
 #lMasuk{margin-top:8px}
 .login[hidden]{display:none!important}
 </style>
@@ -213,14 +248,14 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
 
 <header>
   <div class="top">
-    <div class="brand">Dimsum Bang Jack<small>Kasir · Blok M Square · <button id="btnKeluar" class="kunci" hidden>Keluar</button></small></div>
+    <div class="brand">Dimsum Bang Jack<small>Kasir · Blok M Square · <button id="btnKeluar" class="kunci" hidden>Keluar</button> <button id="btnNotif" class="kunci" hidden>🔔 Aktifkan notif</button></small></div>
     <div class="harga-toggle" role="group" aria-label="Harga per porsi">
       <button id="hPromo" aria-pressed="true">18rb</button>
       <button id="hNormal" aria-pressed="false">20rb</button>
     </div>
   </div>
   <div class="tabs" role="tablist">
-    <button id="tKasir" role="tab" aria-selected="true">Kasir</button>
+    <button id="tKasir" role="tab" aria-selected="true">Kasir<span class="badge" id="tabBadge" hidden>0</span></button>
     <button id="tRekap" role="tab" aria-selected="false">Rekap</button>
     <button id="tDash" role="tab" aria-selected="false" hidden>Dashboard</button>
   </div>
@@ -229,6 +264,10 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
 <main>
   <section id="pKasir">
     <p class="status"><span class="dot" id="dot"></span><span id="statusTxt">Menghubungkan ke server…</span></p>
+    <div class="pending" id="pendingBox" hidden>
+      <h3>Belum bayar<span class="badge" id="pendingN">0</span></h3>
+      <div id="pendingList"></div>
+    </div>
     <div class="menu" id="menu"></div>
   </section>
 
@@ -293,6 +332,7 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
       <div><span>Transaksi</span><b class="num" id="rTrx">0</b></div>
       <div><span>Tunai</span><b class="num" id="rTunai">Rp0</b></div>
       <div><span>QRIS / transfer</span><b class="num" id="rQris">Rp0</b></div>
+      <div><span>Belum dibayar</span><b class="num" id="rBelum">Rp0</b></div>
     </div>
     <div class="kartu">
       <h3>Per varian</h3>
@@ -359,6 +399,12 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
   <div class="lembar-in" role="dialog" aria-modal="true" aria-labelledby="judulBayar">
     <h2 id="judulBayar">Pembayaran</h2>
     <div class="rincian num" id="rincian"></div>
+    <div class="plg">
+      <input id="pNama" placeholder="Nama pelanggan" autocomplete="off" maxlength="40" aria-label="Nama pelanggan (opsional)">
+      <input id="pWa" placeholder="No. WhatsApp" inputmode="tel" autocomplete="off" maxlength="20" aria-label="Nomor WhatsApp pelanggan (opsional)">
+    </div>
+    <p class="plg-cat">Opsional. Isi hanya kalau pelanggan bersedia.</p>
+    <p class="plg-err" id="pErr" hidden></p>
     <div class="seg" role="group" aria-label="Metode bayar">
       <button id="mTunai" aria-pressed="true">Tunai</button>
       <button id="mQris" aria-pressed="false">QRIS / transfer</button>
@@ -374,6 +420,7 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
       <div class="qris-tot"><span>Nominal yang harus dibayar</span><b class="num" id="qrisTotal">Rp0</b></div>
       <p class="qris-cat">Minta pembeli scan, ketik nominal di atas, lalu <b>cek bukti bayar berhasil</b> sebelum tekan simpan.</p>
     </div>
+    <button class="btn-nanti" id="btnNanti">Bayar nanti (catat dulu sebagai belum bayar)</button>
     <div class="aksi">
       <button class="btn-dua" id="btnBatal">Batal</button>
       <button class="btn-utama" id="btnSimpan">Simpan transaksi</button>
@@ -391,6 +438,29 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
     </div>
   </div>
 </div>
+
+<div class="lembar" id="konfBatal" hidden>
+  <div class="lembar-in" role="dialog" aria-modal="true">
+    <h2>Batalkan pesanan?</h2>
+    <p id="konfBatalTxt" style="margin:0;color:var(--pudar)"></p>
+    <div class="aksi">
+      <button class="btn-dua" id="kbTidak">Tidak</button>
+      <button class="btn-utama" id="kbYa">Ya, batalkan</button>
+    </div>
+  </div>
+</div>
+
+<div class="lunas" id="lunas" hidden role="alert">
+  <div class="lunas-in">
+    <div class="cekbulat">✓</div>
+    <b>LUNAS</b>
+    <div class="lrp num" id="lunasRp">Rp0</div>
+    <div class="lsub" id="lunasSub"></div>
+    <small>Ketuk di mana saja untuk menutup</small>
+  </div>
+</div>
+
+<div class="notif-wrap" id="notifWrap" aria-live="polite"></div>
 
 <div class="toast" id="toast" hidden></div>
 
@@ -442,6 +512,13 @@ let tampil = [];                       // transaksi untuk tanggal rekap
 let db = null, unsub = null;
 let bolehHapus = false;               // hanya pemilik yang bisa menghapus transaksi
 const siapa = t => t.kasir ? t.kasir : t.olehPemilik===true ? "Pemilik" : t.olehPemilik===false ? "Pegawai" : "";
+// Status pesanan: "lunas" (data lama tanpa status = lunas), "belum" (bayar nanti), "batal".
+const statusTrx = t => t.jenis==="jual" ? (t.status||"lunas") : "";
+const isLunas = t => t.jenis==="jual" && statusTrx(t)==="lunas";
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function normWa(s){ let d=String(s||"").replace(/\D/g,""); if(!d) return ""; if(d.startsWith("0")) d="62"+d.slice(1); else if(d.startsWith("8")) d="62"+d; return d; }
+const waLokal = d => d ? (d.startsWith("62") ? "0"+d.slice(2) : d) : "";
+const namaItems = it => Object.entries(it||{}).map(([k,v])=>(VARIAN.find(x=>x.id===k)||{nama:k}).nama+" ×"+v).join(", ");
 
 /* ---------- menu ---------- */
 function renderMenu(){
@@ -484,12 +561,21 @@ $("hPromo").onclick=()=>setMode("promo");
 $("hNormal").onclick=()=>setMode("normal");
 
 /* ---------- bayar ---------- */
-function totalNow(){return porsiKeranjang()*HARGA[mode];}
-function bukaBayar(){
-  const t = totalNow();
-  $("rincian").innerHTML = VARIAN.filter(v=>keranjang[v.id]).map(v=>
-    `<div><span>${v.nama} × ${keranjang[v.id]}</span><span>${rp(keranjang[v.id]*HARGA[mode])}</span></div>`).join("")
+let bayarCtx = null;   // pesanan yang sedang dibayar: dari keranjang, atau pesanan "belum bayar" yang dilunasi
+function totalNow(){return bayarCtx ? bayarCtx.total : porsiKeranjang()*HARGA[mode];}
+function bukaBayar(order){
+  if(!(order && order.id)) order = null;
+  bayarCtx = order ? {total:order.total, items:order.items||{}, harga:order.harga, lunasiId:order.id}
+                   : {total:porsiKeranjang()*HARGA[mode], items:{...keranjang}, harga:HARGA[mode], lunasiId:null};
+  const t = bayarCtx.total, it = bayarCtx.items, h = bayarCtx.harga;
+  $("judulBayar").textContent = order ? "Terima pembayaran" : "Pembayaran";
+  $("rincian").innerHTML = (order ? `<div><span>Pesanan jam ${jam(order.ts)}${order.kasir?" · dicatat "+esc(order.kasir):""}</span><span></span></div>` : "")
+    + VARIAN.filter(v=>it[v.id]).map(v=>
+    `<div><span>${v.nama} × ${it[v.id]}</span><span>${rp(it[v.id]*h)}</span></div>`).join("")
     + `<div class="tot"><span>Total</span><span>${rp(t)}</span></div>`;
+  const pl = order && order.pelanggan || {};
+  $("pNama").value = pl.nama || ""; $("pWa").value = waLokal(pl.wa); $("pErr").hidden = true;
+  $("btnNanti").hidden = !!order; $("btnNanti").disabled = false;
   const opsi = [t, ...[20000,50000,100000].filter(x=>x>t)];
   $("cepat").innerHTML = [...new Set(opsi)].map((x,i)=>`<button data-uang="${x}">${i===0?"Uang pas":rp(x)}</button>`).join("");
   $("uang").value=""; setMetode("tunai"); hitungKembali();
@@ -521,8 +607,8 @@ $("cepat").addEventListener("click",e=>{const b=e.target.closest("button");if(!b
 $("mTunai").onclick=()=>setMetode("tunai");
 $("qrisImg").onclick=()=>$("blokQris").classList.toggle("besar");
 $("mQris").onclick=()=>setMetode("qris");
-$("btnBayar").onclick=bukaBayar;
-$("btnBatal").onclick=()=>{$("lembar").hidden=true;};
+$("btnBayar").onclick=()=>bukaBayar();
+$("btnBatal").onclick=()=>{$("lembar").hidden=true; bayarCtx=null;};
 
 async function simpanTrx(trx){
   if(!db || !sesi || !auth.currentUser) throw new Error("belum login");
@@ -535,16 +621,159 @@ async function simpanTrx(trx){
   });
   if(rentangRekap().dari!==rentangRekap().sampai && !$("pRekap").hidden) muatRekap();
 }
+async function updateTrx(id, upd){
+  if(!db || !sesi || !auth.currentUser) throw new Error("belum login");
+  // Tidak ditunggu, sama seperti simpanTrx: berlaku dulu di HP, terkirim saat ada sinyal.
+  db.collection("transaksi").doc(id).update(upd).catch(e=>{
+    toast(e && e.code==="permission-denied" ? "Ditolak server. Mungkin pesanan ini sudah dibayar atau dibatalkan." : "Perubahan gagal terkirim ke server.", true);
+  });
+}
+function ambilPelanggan(){
+  const nama = $("pNama").value.trim().replace(/\s+/g," ").slice(0,40), raw = $("pWa").value.trim(), wa = normWa(raw);
+  if(raw && (wa.length<10 || wa.length>15)){ $("pErr").textContent="Nomor WhatsApp kurang tepat. Contoh: 0812 3456 7890"; $("pErr").hidden=false; $("pWa").focus(); return {ok:false}; }
+  $("pErr").hidden = true;
+  if(!nama && !wa) return {ok:true, data:null};
+  const d = {}; if(nama) d.nama = nama; if(wa) d.wa = wa;
+  return {ok:true, data:d};
+}
+const idBaru = now => "t"+now+Math.random().toString(36).slice(2,6);
 $("btnSimpan").onclick = async ()=>{
+  const P = ambilPelanggan(); if(!P.ok) return;
   const t=totalNow(), u = metode==="tunai" ? (uangDiterima()||t) : t;
-  const now=Date.now();
-  const trx = {id:"t"+now+Math.random().toString(36).slice(2,6), ts:now, hari:hariKasir(now), jenis:"jual",
-    items:{...keranjang}, porsi:porsiKeranjang(), harga:HARGA[mode], total:t, metode, bayar:u, kembali:u-t};
+  const now=Date.now(), oleh = sesi ? sesi.nama : "";
   $("btnSimpan").disabled=true;
+  try{
+    if(bayarCtx && bayarCtx.lunasiId){
+      const upd = {status:"lunas", metode, bayar:u, kembali:u-t, tsBayar:now, dibayarOleh:oleh};
+      if(P.data) upd.pelanggan = P.data;
+      await updateTrx(bayarCtx.lunasiId, upd);
+    } else {
+      const trx = {id:idBaru(now), ts:now, hari:hariKasir(now), jenis:"jual", status:"lunas",
+        items:{...keranjang}, porsi:porsiKeranjang(), harga:HARGA[mode], total:t, metode, bayar:u, kembali:u-t, tsBayar:now, dibayarOleh:oleh};
+      if(P.data) trx.pelanggan = P.data;
+      await simpanTrx(trx);
+      keranjang={}; renderMenu();
+    }
+  }catch(e){ $("btnSimpan").disabled=false; toast("Gagal menyimpan. Cek internet lalu coba lagi.",true); return; }
+  $("lembar").hidden=true; bayarCtx=null;
+  tampilLunas(t, metode, u-t, P.data);
+};
+$("btnNanti").onclick = async ()=>{
+  const P = ambilPelanggan(); if(!P.ok) return;
+  const now=Date.now(), t=porsiKeranjang()*HARGA[mode];
+  const trx = {id:idBaru(now), ts:now, hari:hariKasir(now), jenis:"jual", status:"belum",
+    items:{...keranjang}, porsi:porsiKeranjang(), harga:HARGA[mode], total:t, metode:"-", bayar:0, kembali:0};
+  if(P.data) trx.pelanggan = P.data;
+  $("btnNanti").disabled=true;
   try{ await simpanTrx(trx); }
-  catch(e){ $("btnSimpan").disabled=false; toast("Gagal menyimpan. Cek internet lalu coba lagi.",true); return; }
-  $("lembar").hidden=true; keranjang={}; renderMenu();
-  toast(metode==="tunai" && u>t ? `Tersimpan · kembalian ${rp(u-t)}` : "Transaksi tersimpan");
+  catch(e){ $("btnNanti").disabled=false; toast("Gagal menyimpan. Cek internet lalu coba lagi.",true); return; }
+  $("lembar").hidden=true; bayarCtx=null; keranjang={}; renderMenu();
+  toast(`Pesanan ${rp(t)} dicatat · BELUM BAYAR`);
+};
+
+/* ---------- layar LUNAS ---------- */
+let tLunas=null;
+function tampilLunas(total, m, kembali, plg){
+  $("lunasRp").textContent = rp(total);
+  $("lunasSub").textContent = (m==="qris"?"QRIS / transfer":"Tunai") + (m==="tunai" && kembali>0 ? " · kembalian "+rp(kembali) : "") + (plg && plg.nama ? " · "+plg.nama : "");
+  $("lunas").hidden=false; bunyi([660,990]);
+  clearTimeout(tLunas); tLunas=setTimeout(()=>{$("lunas").hidden=true;}, kembali>0 ? 5000 : 3000);
+}
+$("lunas").onclick=()=>{ $("lunas").hidden=true; clearTimeout(tLunas); };
+
+/* ---------- pesanan belum bayar ---------- */
+let unsubPending=null, pendingData=[], batalId=null;
+function mulaiPending(){
+  if(unsubPending){ unsubPending(); unsubPending=null; }
+  let siap=false;
+  unsubPending = db.collection("transaksi").where("status","==","belum").onSnapshot(s=>{
+    pendingData = s.docs.map(d=>d.data()).sort((a,b)=>a.ts-b.ts);
+    if(siap && sesi && sesi.peran==="owner" && auth.currentUser){
+      s.docChanges().forEach(c=>{
+        if(c.type!=="added") return; const t=c.doc.data();
+        if(t.uid===auth.currentUser.uid) return;
+        beriNotif("baru", `📝 ${t.kasir||"Pegawai"} mencatat pesanan BELUM BAYAR ${rp(t.total)}${t.pelanggan&&t.pelanggan.nama?" · "+t.pelanggan.nama:""}`);
+      });
+    }
+    siap=true; renderPending();
+  },()=>{});
+}
+function berhentiPending(){ if(unsubPending){ unsubPending(); unsubPending=null; } pendingData=[]; renderPending(); }
+function renderPending(){
+  const n=pendingData.length, today=hariKasir(Date.now());
+  $("pendingBox").hidden=!n; $("pendingN").textContent=n;
+  $("tabBadge").hidden=!n; $("tabBadge").textContent=n;
+  $("pendingList").innerHTML = pendingData.map(t=>{
+    const nm = t.pelanggan && t.pelanggan.nama ? esc(t.pelanggan.nama) : "Tanpa nama";
+    return `<div class="pd"><div class="kiri"><b>${nm} · ${rp(t.total)}</b><div>${t.hari!==today?tglPendek(t.hari)+", ":""}jam ${jam(t.ts)} · ${namaItems(t.items)}${t.kasir?" · dicatat "+esc(t.kasir):""}</div></div>
+      <div class="tombol"><button class="btn-lunas" data-lunasi="${esc(t.id)}">Terima bayar</button><button class="btn-batal-kecil" data-batalkan="${esc(t.id)}">Batalkan</button></div></div>`;
+  }).join("");
+}
+$("pendingList").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const t = pendingData.find(x=>x.id===(b.dataset.lunasi||b.dataset.batalkan)); if(!t) return;
+  if(b.dataset.lunasi) bukaBayar(t);
+  else { batalId=t.id; $("konfBatalTxt").textContent=`Pesanan ${t.pelanggan&&t.pelanggan.nama?t.pelanggan.nama+" ":""}jam ${jam(t.ts)} senilai ${rp(t.total)} akan ditandai batal. Pemilik tetap bisa melihatnya di rekap.`; $("konfBatal").hidden=false; }
+});
+$("kbTidak").onclick=()=>{ $("konfBatal").hidden=true; batalId=null; };
+$("kbYa").onclick=async ()=>{
+  const id=batalId; $("konfBatal").hidden=true; batalId=null; if(!id) return;
+  try{ await updateTrx(id,{status:"batal", tsBatal:Date.now(), dibatalkanOleh:sesi?sesi.nama:""}); toast("Pesanan dibatalkan"); }
+  catch(e){ toast("Gagal membatalkan. Coba lagi.",true); }
+};
+
+/* ---------- notifikasi untuk pemilik ---------- */
+let unsubBayar=null, actx=null;
+function mulaiNotifBayar(){
+  if(unsubBayar){ unsubBayar(); unsubBayar=null; }
+  if(!sesi || sesi.peran!=="owner") return;
+  let siap=false;
+  // Mundur 10 menit untuk jaga-jaga jam HP pegawai tidak sama; data lama di tampilan pertama dilewati.
+  unsubBayar = db.collection("transaksi").where("tsBayar",">",Date.now()-600000).onSnapshot(s=>{
+    if(siap) s.docChanges().forEach(c=>{
+      if(c.type!=="added") return; const t=c.doc.data();
+      if(t.status!=="lunas" || (t.dibayarOleh||t.kasir)===sesi.nama) return;
+      beriNotif("bayar", `💰 ${t.dibayarOleh||t.kasir||"Pegawai"} terima ${rp(t.total)} · ${t.metode==="qris"?"QRIS":"Tunai"}${t.pelanggan&&t.pelanggan.nama?" · "+t.pelanggan.nama:""}`);
+    });
+    siap=true;
+  },()=>{});
+}
+function berhentiNotifBayar(){ if(unsubBayar){ unsubBayar(); unsubBayar=null; } $("notifWrap").innerHTML=""; }
+function bunyi(nada){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const t0=actx.currentTime;
+    (nada||[880,1320]).forEach((f,i)=>{
+      const o=actx.createOscillator(), g=actx.createGain(), s=t0+i*0.14;
+      o.type="sine"; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(0.3,s+0.02); g.gain.exponentialRampToValueAtTime(0.0001,s+0.25);
+      o.connect(g); g.connect(actx.destination); o.start(s); o.stop(s+0.3);
+    });
+  }catch(e){}
+}
+function beriNotif(jenis, teks){
+  const el=document.createElement("button"); el.className="notif "+jenis;
+  el.innerHTML=`<span></span><small>${jam(Date.now())}</small>`; el.firstChild.textContent=teks;
+  el.onclick=()=>el.remove();
+  const w=$("notifWrap"); w.prepend(el); while(w.children.length>4) w.lastChild.remove();
+  setTimeout(()=>el.remove(), 30000);
+  bunyi(); try{ navigator.vibrate && navigator.vibrate([150,80,150]); }catch(e){}
+  if(document.hidden && "Notification" in window && Notification.permission==="granted" && navigator.serviceWorker){
+    navigator.serviceWorker.ready.then(r=>r.showNotification("Dimsum Bang Jack",{body:teks, icon:"icon-192.png", badge:"icon-192.png", tag:"bj-"+Date.now(), vibrate:[150,80,150]})).catch(()=>{});
+  }
+}
+function aturTombolNotif(){
+  const owner = !!(sesi && sesi.peran==="owner"), ada = "Notification" in window;
+  $("btnNotif").hidden = !owner || !ada || Notification.permission==="granted";
+  if(ada) $("btnNotif").textContent = Notification.permission==="denied" ? "🔕 Notif diblokir" : "🔔 Aktifkan notif";
+}
+$("btnNotif").onclick = async ()=>{
+  bunyi([1]);  // membuka izin suara di browser
+  if(!("Notification" in window)) return;
+  if(Notification.permission==="denied"){ toast("Notifikasi diblokir. Izinkan lewat Pengaturan HP > Aplikasi > Dimsum Bang Jack > Notifikasi.",true); return; }
+  let r="default"; try{ r = await Notification.requestPermission(); }catch(e){}
+  aturTombolNotif();
+  toast(r==="granted" ? "Notifikasi aktif" : "Notifikasi belum diizinkan", r!=="granted");
 };
 
 /* ---------- rekap ---------- */
@@ -558,7 +787,8 @@ function renderRekap(){
   isiPilihanKasir();
   const data = tampil.filter(cocokKasir);
   { const R0=rentangRekap(); $("rLabel").textContent = R0.label+labelKasir(); $("xPeriode").textContent = R0.label+labelKasir(); }
-  const jual = data.filter(t=>t.jenis==="jual").sort((a,b)=>b.ts-a.ts);
+  const jual = data.filter(isLunas).sort((a,b)=>b.ts-a.ts);
+  const belum = data.filter(t=>statusTrx(t)==="belum");
   const peg = data.filter(t=>t.jenis==="pegawai");
   const omzet = jual.reduce((a,t)=>a+t.total,0);
   const porsi = jual.reduce((a,t)=>a+t.porsi,0);
@@ -568,14 +798,16 @@ function renderRekap(){
   $("rTrx").textContent=jual.length;
   $("rTunai").textContent=rp(jual.filter(t=>t.metode==="tunai").reduce((a,t)=>a+t.total,0));
   $("rQris").textContent=rp(jual.filter(t=>t.metode==="qris").reduce((a,t)=>a+t.total,0));
+  $("rBelum").textContent=rp(belum.reduce((a,t)=>a+t.total,0)) + (belum.length?` (${belum.length})`:"");
   const per={}; jual.forEach(t=>Object.entries(t.items||{}).forEach(([k,v])=>per[k]=(per[k]||0)+v));
   $("rVarian").innerHTML = VARIAN.map(v=>`<div class="baris"><span>${v.nama}</span><b class="num">${per[v.id]||0} porsi</b></div>`).join("");
   const grp={}; jual.forEach(t=>{const k=siapa(t)||"Tanpa nama"; grp[k]=grp[k]||{n:0,rp:0,owner:!!t.olehPemilik}; grp[k].n++; grp[k].rp+=t.total;});
   const ks=Object.keys(grp).sort((a,b)=>grp[b].rp-grp[a].rp);
   $("rOleh").innerHTML = ks.length ? ks.map(k=>`<div class="baris"><span>${k}${grp[k].owner?" (pemilik)":""}</span><b class="num">${grp[k].n} trx · ${rp(grp[k].rp)}</b></div>`).join("")
     : `<div class="kosong">Belum ada transaksi.</div>`;
-  $("rKeluar").textContent = porsi+pPeg;
-  $("rMika").textContent = ((porsi+pPeg)/25).toLocaleString("id-ID",{maximumFractionDigits:1});
+  const pBelum = belum.reduce((a,t)=>a+t.porsi,0);
+  $("rKeluar").textContent = porsi+pPeg+pBelum;
+  $("rMika").textContent = ((porsi+pPeg+pBelum)/25).toLocaleString("id-ID",{maximumFractionDigits:1});
   $("rPegawai").textContent = pPeg ? `Sudah diambil ${pPeg} porsi (jam ${peg.map(t=>jam(t.ts)+(t.kasir?" oleh "+t.kasir:"")).join(", ")}).` : "Belum diambil.";
   const R = rentangRekap(), multi = R.dari!==R.sampai;
   if(multi) $("rPegawai").textContent = pPeg ? `Total ${pPeg} porsi diambil pegawai di periode ini.` : "Tidak ada di periode ini.";
@@ -589,14 +821,20 @@ function renderRekap(){
   $("bulkBar").hidden = !modePilih;
   perbaruiBulk();
   $("rDaftar").innerHTML = semuaUrut.length ? semuaUrut.slice(0,MAKS).map(t=>{
-    const isi = t.jenis==="pegawai" ? "Porsi gratis pegawai" :
-      Object.entries(t.items).map(([k,v])=>(VARIAN.find(x=>x.id===k)||{nama:k}).nama+" ×"+v).join(", ");
-    const kanan = t.jenis==="pegawai" ? "Rp0" : rp(t.total);
-    const chip = t.jenis==="pegawai" ? "jatah pegawai" : (t.metode==="qris"?"QRIS":"tunai");
+    const st = statusTrx(t);
+    const isi = t.jenis==="pegawai" ? "Porsi gratis pegawai" : namaItems(t.items)
+      + (st==="lunas" && t.dibayarOleh && t.dibayarOleh!==t.kasir ? ` · dibayar ke ${esc(t.dibayarOleh)} jam ${jam(t.tsBayar)}` : "")
+      + (st==="batal" && t.dibatalkanOleh ? ` · dibatalkan ${esc(t.dibatalkanOleh)}` : "");
+    const kanan = t.jenis==="pegawai" ? "Rp0" : st==="batal" ? `<s>${rp(t.total)}</s>` : rp(t.total);
+    const chip = t.jenis==="pegawai" ? `<span class="chip">jatah pegawai</span>`
+      : st==="belum" ? `<span class="chip belum">belum bayar</span>` : st==="batal" ? `<span class="chip batal">batal</span>`
+      : `<span class="chip">${t.metode==="qris"?"QRIS":"tunai"}</span>`;
+    const pl = t.pelanggan || {};
+    const plg = (pl.nama||pl.wa) ? (pl.wa ? `<a class="chip plg-chip" href="https://wa.me/${esc(pl.wa)}" target="_blank" rel="noopener">${esc(pl.nama||"Pelanggan")} · WA ${esc(waLokal(pl.wa))}</a>` : `<span class="chip plg-chip">${esc(pl.nama)}</span>`) : "";
     const s = siapa(t);
     const oleh = s ? `<span class="chip oleh ${t.olehPemilik?"oleh-pem":"oleh-peg"}">input: ${s}</span>` : "";
     const cek = modePilih ? `<input type="checkbox" class="cekTrx" data-id="${t.id}" aria-label="Pilih transaksi ${jam(t.ts)}"${pilih.has(t.id)?" checked":""}>` : "";
-    return `<div class="trx${modePilih?" pilih":""}${pilih.has(t.id)?" terpilih":""}" data-id="${t.id}">${cek}<div class="kiri"><b class="num">${multi?tglPendek(t.hari)+" · ":""}${jam(t.ts)}</b><span class="chip">${chip}</span>${oleh}<div>${isi}</div></div>
+    return `<div class="trx${modePilih?" pilih":""}${pilih.has(t.id)?" terpilih":""}${st==="batal"?" batal-row":""}" data-id="${t.id}">${cek}<div class="kiri"><b class="num">${multi?tglPendek(t.hari)+" · ":""}${jam(t.ts)}</b>${chip}${oleh}${plg}<div>${isi}</div></div>
       <div style="text-align:right"><b class="num">${kanan}</b>${bolehHapus&&!modePilih?`<br><button class="hapus" data-hapus="${t.id}">Hapus</button>`:""}</div></div>`;
   }).join("") + (semuaUrut.length>MAKS?`<div class="kosong">Menampilkan ${MAKS} transaksi terbaru dari ${semuaUrut.length}. Download Excel untuk daftar lengkap.</div>`:"") + (bolehHapus?"":`<div class="kosong">Salah input? Minta pemilik (login Ridwan) untuk menghapus.</div>`)
   : `<div class="kosong">Belum ada transaksi di periode ini.</div>`;
@@ -746,7 +984,7 @@ async function muatDash(){
   try{
     if(dMode==="jam"){
       const h=ymd(hariIni);
-      const rows=(await ambilRentang(h,h)).filter(t=>t.jenis==="jual");
+      const rows=(await ambilRentang(h,h)).filter(isLunas);
       const urut = x => (x-6+24)%24;              // jam 06.00 dianggap awal hari kasir
       let lo=urut(18), hi=urut(23);
       rows.forEach(t=>{const u=urut(new Date(t.ts).getHours());lo=Math.min(lo,u);hi=Math.max(hi,u);});
@@ -760,18 +998,18 @@ async function muatDash(){
       const hasil = await Promise.all(rentang.map(([a,b])=>ambilRentang(ymd(a),ymd(b))));
       buckets = rentang.map(([a,b],i)=>{
         const bk=kosongBucket(`${a.getDate()} ${BLN3[a.getMonth()]}`,`${a.getDate()} ${BLN3[a.getMonth()]} – ${b.getDate()} ${BLN3[b.getMonth()]} ${b.getFullYear()}`);
-        hasil[i].filter(t=>t.jenis==="jual").forEach(t=>isi(bk,t)); return bk;});
+        hasil[i].filter(isLunas).forEach(t=>isi(bk,t)); return bk;});
       periode = `8 minggu terakhir · ${buckets[0].sub.split(" – ")[0]} – ${buckets[7].sub.split(" – ")[1]}`;
     } else if(dMode==="bulan"){
       const y=hariIni.getFullYear();
       const hasil = await Promise.all(BLN3.map((_,m)=>ambilRentang(`${y}-${pad(m+1)}-01`,`${y}-${pad(m+1)}-31`)));
-      buckets = BLN3.map((b,m)=>{const bk=kosongBucket(b,`${NAMA_BLN[m]} ${y}`);hasil[m].filter(t=>t.jenis==="jual").forEach(t=>isi(bk,t));return bk;});
+      buckets = BLN3.map((b,m)=>{const bk=kosongBucket(b,`${NAMA_BLN[m]} ${y}`);hasil[m].filter(isLunas).forEach(t=>isi(bk,t));return bk;});
       periode = `Tahun ${y}`;
     } else {
       const yAkhir=hariIni.getFullYear(), yAwal=Math.min(2026,yAkhir);
       for(let y=yAwal;y<=yAkhir;y++){
         const hasil = await Promise.all(BLN3.map((_,m)=>ambilRentang(`${y}-${pad(m+1)}-01`,`${y}-${pad(m+1)}-31`)));
-        const bk=kosongBucket(String(y),`Tahun ${y}`); hasil.flat().filter(t=>t.jenis==="jual").forEach(t=>isi(bk,t)); buckets.push(bk);
+        const bk=kosongBucket(String(y),`Tahun ${y}`); hasil.flat().filter(isLunas).forEach(t=>isi(bk,t)); buckets.push(bk);
       }
       periode = yAwal===yAkhir ? `Tahun ${yAkhir}` : `${yAwal} – ${yAkhir}`;
     }
@@ -838,7 +1076,8 @@ async function ambilData(){
   return {rows,label:R.label+labelKasir(),file:R.file+(rKasir==="semua"?"":"-"+rKasir.replace(/\s+/g,""))};
 }
 function olah(rows){
-  const jual=rows.filter(t=>t.jenis==="jual"), peg=rows.filter(t=>t.jenis==="pegawai");
+  const jual=rows.filter(isLunas), peg=rows.filter(t=>t.jenis==="pegawai");
+  const belum=rows.filter(t=>statusTrx(t)==="belum"), batal=rows.filter(t=>statusTrx(t)==="batal");
   const sum=(a,f)=>a.reduce((x,t)=>x+f(t),0);
   const per={}; jual.forEach(t=>Object.entries(t.items||{}).forEach(([k,v])=>per[k]=(per[k]||0)+v));
   const ring=[
@@ -847,8 +1086,11 @@ function olah(rows){
     ["Jumlah transaksi", jual.length],
     ["Tunai", sum(jual.filter(t=>t.metode==="tunai"),t=>t.total)],
     ["QRIS / transfer", sum(jual.filter(t=>t.metode==="qris"),t=>t.total)],
+    ["Belum dibayar (Rp)", sum(belum,t=>t.total)],
+    ["Pesanan belum dibayar", belum.length],
+    ["Pesanan dibatalkan", batal.length],
     ["Jatah pegawai (porsi)", sum(peg,t=>t.porsi)],
-    ["Porsi keluar total", sum(jual,t=>t.porsi)+sum(peg,t=>t.porsi)],
+    ["Porsi keluar total", sum(jual,t=>t.porsi)+sum(peg,t=>t.porsi)+sum(belum,t=>t.porsi)],
     ...Object.entries(jual.reduce((g,t)=>{const k=siapa(t)||"Tanpa nama"; g[k]=(g[k]||0)+t.total; return g;},{})).map(([k,v])=>["Diinput "+k+" (Rp)", v])
   ];
   const varian = VARIAN.map(v=>[v.nama, per[v.id]||0]);
@@ -856,10 +1098,23 @@ function olah(rows){
     tglIndo(t.hari), jam(t.ts),
     t.jenis==="pegawai" ? "Jatah pegawai" : Object.entries(t.items).map(([k,v])=>(VARIAN.find(x=>x.id===k)||{nama:k}).nama+" x"+v).join(", "),
     t.porsi, t.jenis==="pegawai"?0:t.harga, t.total,
-    t.jenis==="pegawai" ? "-" : (t.metode==="qris"?"QRIS":"Tunai"),
-    siapa(t)||"-"
+    t.jenis==="pegawai" ? "-" : statusTrx(t)!=="lunas" ? "-" : (t.metode==="qris"?"QRIS":"Tunai"),
+    siapa(t)||"-",
+    t.jenis==="pegawai" ? "Jatah" : ({lunas:"Lunas",belum:"Belum bayar",batal:"Batal"})[statusTrx(t)],
+    (t.pelanggan&&t.pelanggan.nama)||"",
+    t.pelanggan&&t.pelanggan.wa ? waLokal(t.pelanggan.wa) : ""
   ]);
-  return {ring,varian,trx};
+  // Daftar pelanggan yang bersedia memberi data (digabung per nomor WA, atau per nama bila tanpa nomor)
+  const pg={};
+  rows.filter(t=>t.jenis==="jual" && t.pelanggan && (t.pelanggan.nama||t.pelanggan.wa)).forEach(t=>{
+    const p=t.pelanggan, k=p.wa||("nama:"+(p.nama||"").toLowerCase());
+    const g = pg[k] = pg[k] || {nama:"", wa:p.wa?waLokal(p.wa):"", n:0, rp:0, akhir:""};
+    if(p.nama) g.nama=p.nama;
+    if(statusTrx(t)==="lunas"){ g.n++; g.rp+=t.total; }
+    if(t.hari>g.akhir) g.akhir=t.hari;
+  });
+  const pelanggan = Object.values(pg).sort((a,b)=>b.rp-a.rp).map(g=>[g.nama||"-", g.wa||"-", g.n, g.rp, g.akhir?tglIndo(g.akhir):"-"]);
+  return {ring,varian,trx,pelanggan};
 }
 async function simpanFile(filename,data,infoId="xInfo"){
   try{
@@ -906,11 +1161,14 @@ $("xExcel").onclick = async ()=>{
     const s1=XLSX.utils.aoa_to_sheet([["Rekap Dimsum Bang Jack"],["Periode",label],[],["Keterangan","Nilai"],...o.ring]);
     s1["!cols"]=[{wch:26},{wch:16}];
     const s2=XLSX.utils.aoa_to_sheet([["Varian","Porsi terjual"],...o.varian]); s2["!cols"]=[{wch:14},{wch:14}];
-    const s3=XLSX.utils.aoa_to_sheet([["Tanggal","Jam","Pesanan","Porsi","Harga/porsi","Total","Metode","Input oleh"],...o.trx]);
-    s3["!cols"]=[{wch:16},{wch:7},{wch:44},{wch:7},{wch:12},{wch:12},{wch:9},{wch:11}];
+    const s3=XLSX.utils.aoa_to_sheet([["Tanggal","Jam","Pesanan","Porsi","Harga/porsi","Total","Metode","Input oleh","Status","Nama pelanggan","WhatsApp"],...o.trx]);
+    s3["!cols"]=[{wch:16},{wch:7},{wch:44},{wch:7},{wch:12},{wch:12},{wch:9},{wch:11},{wch:12},{wch:18},{wch:16}];
+    const s4=XLSX.utils.aoa_to_sheet([["Nama","WhatsApp","Jumlah beli (lunas)","Total belanja","Terakhir beli"],...o.pelanggan]);
+    s4["!cols"]=[{wch:20},{wch:16},{wch:18},{wch:14},{wch:18}];
     XLSX.utils.book_append_sheet(wb,s1,"Ringkasan");
     XLSX.utils.book_append_sheet(wb,s2,"Per Varian");
     XLSX.utils.book_append_sheet(wb,s3,"Transaksi");
+    XLSX.utils.book_append_sheet(wb,s4,"Pelanggan");
     const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
     await simpanFile(`Rekap-BangJack-${file}.xlsx`, new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}));
   }catch(e){ $("xInfo").textContent="Gagal membuat Excel. Cek internet lalu coba lagi."; }
@@ -927,11 +1185,11 @@ $("xPdf").onclick = async ()=>{
     doc.setFont("helvetica","normal"); doc.setFontSize(11); doc.setTextColor(60,40,30);
     doc.text("Rekap jualan · "+label,14,25);
     const rpN = n=>"Rp"+Math.round(n).toLocaleString("id-ID");
-    const fmt = (k,v)=> /Rp|Omzet|Tunai|QRIS/.test(k) ? rpN(v) : String(v);
+    const fmt = (k,v)=> /Rp|Omzet|Tunai|QRIS|dibayar \(/.test(k) ? rpN(v) : String(v);
     doc.autoTable({startY:31,head:[["Ringkasan",""]],body:o.ring.map(([k,v])=>[k,fmt(k,v)]),theme:"grid",headStyles:{fillColor:merah},columnStyles:{1:{halign:"right"}},margin:{left:14,right:14}});
     doc.autoTable({startY:doc.lastAutoTable.finalY+6,head:[["Varian","Porsi"]],body:o.varian.map(r=>[r[0],String(r[1])]),theme:"grid",headStyles:{fillColor:merah},columnStyles:{1:{halign:"right"}},margin:{left:14,right:14}});
     doc.autoTable({startY:doc.lastAutoTable.finalY+6,head:[["Tanggal","Jam","Pesanan","Porsi","Total","Metode","Input"]],
-      body:o.trx.map(r=>[r[0],r[1],r[2],String(r[3]),rpN(r[5]),r[6],r[7]]),theme:"striped",headStyles:{fillColor:merah},styles:{fontSize:8},
+      body:o.trx.map(r=>[r[0],r[1],r[2]+(r[9]?" ("+r[9]+")":""),String(r[3]),rpN(r[5]),r[8]==="Lunas"||r[8]==="Jatah"?r[6]:r[8],r[7]]),theme:"striped",headStyles:{fillColor:merah},styles:{fontSize:8},
       columnStyles:{3:{halign:"right"},4:{halign:"right"}},margin:{left:14,right:14}});
     await simpanFile(`Rekap-BangJack-${file}.pdf`, doc.output("blob"));
   }catch(e){ $("xInfo").textContent="Gagal membuat PDF. Cek internet lalu coba lagi."; }
@@ -953,6 +1211,7 @@ function terapkanPeran(){
   const owner = !!(sesi && sesi.peran==="owner");
   bolehHapus = owner;
   $("kartuExport").hidden = !owner; $("tDash").hidden = !owner;
+  aturTombolNotif();
   $("btnKeluar").hidden = !sesi;
   $("btnKeluar").textContent = sesi ? `👤 ${sesi.nama} · Keluar` : "Keluar";
   if(!owner && !$("pDash").hidden) tab("kasir");
@@ -968,7 +1227,7 @@ window.addEventListener("online", setStatus); window.addEventListener("offline",
 $("btnKeluar").onclick = ()=>keluar();
 function keluar(){
   keranjang = {}; renderMenu();
-  $("lembar").hidden = true; $("konfirm").hidden = true;
+  $("lembar").hidden = true; $("konfirm").hidden = true; $("konfBatal").hidden = true; $("lunas").hidden = true; bayarCtx = null;
   if(auth) auth.signOut();
 }
 $("lLihat").onclick = ()=>{ const p=$("lPass"); const lihat=p.type==="password"; p.type=lihat?"text":"password"; $("lLihat").textContent=lihat?"Tutup":"Lihat"; };
@@ -998,10 +1257,12 @@ if(auth){
       db = fs;
       $("login").hidden = true; $("lPass").value = ""; $("lErr").hidden = true;
       terapkanPeran(); setStatus(); tab("kasir");
+      mulaiPending(); mulaiNotifBayar();
       toast(`Halo ${sesi.nama}, selamat jualan!`);
     } else {
       sesi = null; db = null;
       if(unsub){ unsub(); unsub=null; }
+      berhentiPending(); berhentiNotifBayar();
       tampil = []; modePilih = false; pilih.clear();
       terapkanPeran(); setStatus(); tab("kasir");
       $("lUser").value = ""; $("lPass").value = "";
