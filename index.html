@@ -762,6 +762,7 @@ function beriNotif(jenis, teks){
     navigator.serviceWorker.ready.then(r=>r.showNotification("Dimsum Bang Jack",{body:teks, icon:"icon-192.png", badge:"icon-192.png", tag:"bj-"+Date.now(), vibrate:[150,80,150]})).catch(()=>{});
   }
 }
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden && sesi) aturTombolNotif(); });
 function aturTombolNotif(){
   const owner = !!(sesi && sesi.peran==="owner"), ada = "Notification" in window;
   $("btnNotif").hidden = !owner || !ada || Notification.permission==="granted";
@@ -770,7 +771,7 @@ function aturTombolNotif(){
 $("btnNotif").onclick = async ()=>{
   bunyi([1]);  // membuka izin suara di browser
   if(!("Notification" in window)) return;
-  if(Notification.permission==="denied"){ toast("Notifikasi diblokir. Izinkan lewat Pengaturan HP > Aplikasi > Dimsum Bang Jack > Notifikasi.",true); return; }
+  if(Notification.permission==="denied"){ toast("Notifikasi masih diblokir. Tutup paksa aplikasi lalu buka lagi. Kalau tetap, izinkan di Chrome > Setelan > Setelan situs > Notifikasi.",true); return; }
   let r="default"; try{ r = await Notification.requestPermission(); }catch(e){}
   aturTombolNotif();
   toast(r==="granted" ? "Notifikasi aktif" : "Notifikasi belum diizinkan", r!=="granted");
