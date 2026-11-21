@@ -202,6 +202,7 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
 .pd .tombol{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
 .btn-lunas{background:var(--hijau);color:#fff;border-radius:10px;padding:9px 12px;font-weight:700;font-size:14px}
 .btn-batal-kecil{background:none;color:var(--pudar);font-size:12px;text-decoration:underline;padding:4px 2px}
+.pd-kunci{font-size:12px;color:var(--pudar);text-align:right;line-height:1.3;max-width:120px}
 .plg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .plg input{width:100%;min-width:0;box-sizing:border-box;font:500 15px var(--f-body);padding:10px 12px;border-radius:12px;border:1.5px solid var(--garis);background:var(--krem);color:var(--tinta)}
 .plg-cat{font-size:12px;color:var(--pudar);margin:-6px 0 0}
@@ -770,6 +771,8 @@ function mulaiPending(){
   },()=>{});
 }
 function berhentiPending(){ if(unsubPending){ unsubPending(); unsubPending=null; } pendingData=[]; renderPending(); }
+// Pesanan belum bayar hanya bisa diproses oleh pegawai yang membuatnya, atau pemilik.
+const bisaProses = t => !!(sesi && (sesi.peran==="owner" || (auth.currentUser && t.uid===auth.currentUser.uid)));
 function renderPending(){
   const n=pendingData.length, today=hariKasir(Date.now());
   $("pendingBox").hidden=!n; $("pendingN").textContent=n;
@@ -777,12 +780,12 @@ function renderPending(){
   $("pendingList").innerHTML = pendingData.map(t=>{
     const nm = t.pelanggan && t.pelanggan.nama ? esc(t.pelanggan.nama) : "Tanpa nama";
     return `<div class="pd"><div class="kiri"><b>${nm} · ${rp(t.total)}</b><div>${t.hari!==today?tglPendek(t.hari)+", ":""}jam ${jam(t.ts)} · ${namaItems(t.items)}${t.kasir?" · dicatat "+esc(t.kasir):""}</div></div>
-      <div class="tombol"><button class="btn-lunas" data-lunasi="${esc(t.id)}">Terima bayar</button><button class="btn-batal-kecil" data-batalkan="${esc(t.id)}">Batalkan</button></div></div>`;
+      ${bisaProses(t) ? `<div class="tombol"><button class="btn-lunas" data-lunasi="${esc(t.id)}">Terima bayar</button><button class="btn-batal-kecil" data-batalkan="${esc(t.id)}">Batalkan</button></div>` : `<div class="tombol"><span class="pd-kunci">Hanya ${esc(t.kasir||"pembuatnya")} atau pemilik yang bisa memproses</span></div>`}</div>`;
   }).join("");
 }
 $("pendingList").addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
-  const t = pendingData.find(x=>x.id===(b.dataset.lunasi||b.dataset.batalkan)); if(!t) return;
+  const t = pendingData.find(x=>x.id===(b.dataset.lunasi||b.dataset.batalkan)); if(!t || !bisaProses(t)) return;
   if(b.dataset.lunasi) bukaBayar(t);
   else { batalId=t.id; $("konfBatalTxt").textContent=`Pesanan ${t.pelanggan&&t.pelanggan.nama?t.pelanggan.nama+" ":""}jam ${jam(t.ts)} senilai ${rp(t.total)} akan ditandai batal. Pemilik tetap bisa melihatnya di rekap.`; $("konfBatal").hidden=false; }
 });
