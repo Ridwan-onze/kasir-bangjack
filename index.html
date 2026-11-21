@@ -690,23 +690,36 @@ function antrePush(judul, pesan, tag){
   a.push({judul:((EMOJI[tag]||"")+" "+judul).trim(), pesan, t:Date.now()});
   lsSet(LS_PUSH, a.slice(-30)); kirimAntrePush();
 }
+let pushLagi = false, pushUlang = null;
 async function kirimAntrePush(){
-  if(pushSibuk || !auth || !auth.currentUser) return; pushSibuk = true;
+  if(!auth || !auth.currentUser) return;
+  if(pushSibuk){ pushLagi = true; return; }          // sedang mengirim: ulangi setelah selesai
+  pushSibuk = true; clearTimeout(pushUlang);
+  let gagal = false;
   try{
     let a = lsGet(LS_PUSH, []);
-    if(!a.length) return;
-    const token = await auth.currentUser.getIdToken();
-    while(a.length){
-      const {t, ...m} = a[0];
-      if(Date.now()-t > 6*3600e3){ a.shift(); lsSet(LS_PUSH, a); continue; }
-      if(Date.now()-t > 60000) m.pesan += ` (jam ${jam(t)})`;
-      const r = await fetch(PUSH_URL+"/kirim", {method:"POST", headers:{"Authorization":"Bearer "+token, "Content-Type":"application/json"}, body:JSON.stringify(m)});
-      if(!r.ok) break;
-      a.shift(); lsSet(LS_PUSH, a);
+    if(a.length){
+      const token = await auth.currentUser.getIdToken();
+      while(a.length){
+        const {t, ...m} = a[0];
+        if(Date.now()-t > 6*3600e3){ a.shift(); lsSet(LS_PUSH, a); a = lsGet(LS_PUSH, []); continue; }
+        if(Date.now()-t > 120000) m.pesan += ` (jam ${jam(t)})`;
+        let r = null;
+        try{
+          const ctl = new AbortController(), batas = setTimeout(()=>ctl.abort(), 15000);
+          r = await fetch(PUSH_URL+"/kirim", {method:"POST", headers:{"Authorization":"Bearer "+token, "Content-Type":"application/json"}, body:JSON.stringify(m), signal:ctl.signal});
+          clearTimeout(batas);
+        }catch(e){ lsSet("bj_push_err", new Date().toLocaleString("id-ID")+" "+((e&&e.name)||"gagal")); }
+        if(!r || !r.ok){ if(r) lsSet("bj_push_err", new Date().toLocaleString("id-ID")+" status "+r.status); gagal = true; break; }
+        a.shift(); lsSet(LS_PUSH, a); a = lsGet(LS_PUSH, []);
+      }
     }
-  }catch(e){} finally{ pushSibuk = false; }
+  }catch(e){ gagal = true; } finally{ pushSibuk = false; }
+  if(pushLagi){ pushLagi = false; return kirimAntrePush(); }
+  if(gagal) pushUlang = setTimeout(kirimAntrePush, 10000);   // gagal kirim: coba lagi tiap 10 detik
 }
 window.addEventListener("online", kirimAntrePush);
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) kirimAntrePush(); });
 $("btnSimpan").onclick = async ()=>{
   const P = ambilPelanggan(); if(!P.ok) return;
   const t=totalNow(), u = metode==="tunai" ? (uangDiterima()||t) : t;
