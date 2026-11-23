@@ -1,5 +1,5 @@
 // Service worker Kasir Bang Jack: simpan tampilan aplikasi supaya tetap bisa dibuka saat sinyal lemah.
-const CACHE = "bangjack-v3";
+const CACHE = "bangjack-v4";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
@@ -26,7 +26,7 @@ self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : "" }; }
   e.waitUntil(self.registration.showNotification(d.title || "Dimsum Bang Jack", {
-    body: d.body || "", icon: "icon-192.png", badge: "icon-192.png",
+    body: d.body || "", icon: "icon-192.png", badge: "badge-96.png",
     tag: "bj-" + Date.now(), vibrate: [150, 80, 150]
   }));
 });
