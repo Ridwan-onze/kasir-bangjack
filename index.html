@@ -421,10 +421,10 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
       <div class="qris-tot"><span>Nominal yang harus dibayar</span><b class="num" id="qrisTotal">Rp0</b></div>
       <p class="qris-cat">Minta pembeli scan, ketik nominal di atas, lalu <b>cek bukti bayar berhasil</b> sebelum tekan simpan.</p>
     </div>
-    <button class="btn-nanti" id="btnNanti">Bayar nanti (catat dulu sebagai belum bayar)</button>
+    <button class="btn-nanti" id="btnNanti" hidden>Bayar nanti (catat dulu sebagai belum bayar)</button>
     <div class="aksi">
       <button class="btn-dua" id="btnBatal">Batal</button>
-      <button class="btn-utama" id="btnSimpan">Simpan transaksi</button>
+      <button class="btn-utama" id="btnSimpan">Sudah dibayar · Simpan</button>
     </div>
   </div>
 </div>
@@ -576,7 +576,7 @@ function bukaBayar(order){
     + `<div class="tot"><span>Total</span><span>${rp(t)}</span></div>`;
   const pl = order && order.pelanggan || {};
   $("pNama").value = pl.nama || ""; $("pWa").value = waLokal(pl.wa); $("pErr").hidden = true;
-  $("btnNanti").hidden = !!order; $("btnNanti").disabled = false;
+  $("btnNanti").hidden = true;   // menu "Bayar nanti" dihapus 23 Nov 2026: transaksi disimpan hanya kalau sudah dibayar
   const opsi = [t, ...[20000,50000,100000].filter(x=>x>t)];
   $("cepat").innerHTML = [...new Set(opsi)].map((x,i)=>`<button data-uang="${x}">${i===0?"Uang pas":rp(x)}</button>`).join("");
   $("uang").value=""; setMetode("tunai"); hitungKembali();
