@@ -314,7 +314,8 @@ input[type=date],input[type=month],select{font:inherit;padding:8px 10px;border-r
       <button data-rp="tahun" aria-pressed="false">Tahunan</button>
       <button data-rp="rentang" aria-pressed="false">Periode</button>
     </div>
-    <div class="rentang">
+    <p class="pudar" id="rInfoPeg" style="margin:0 0 10px" hidden>Rekap pegawai hanya untuk hari ini (hari kasir mulai jam 06.00). Rekap hari lain, bulanan, dan tahunan hanya bisa dilihat pemilik.</p>
+    <div class="rentang" id="rTglWrap">
       <input type="date" id="tgl" aria-label="Tanggal rekap">
       <input type="month" id="rBln" aria-label="Bulan rekap" hidden>
       <select id="rThn" aria-label="Tahun rekap" hidden></select>
@@ -490,11 +491,13 @@ const NAMA_BLN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustu
 function tglIndo(s){const [y,m,d]=s.split("-");return `${+d} ${NAMA_BLN[+m-1]} ${y}`;}
 function tglPendek(s){const [y,m,d]=s.split("-");return `${+d} ${NAMA_BLN[+m-1].slice(0,3)}`;}
 let rMode="hari", rReq=0, rKasir="semua", modePilih=false, daftarIds=[];
+var PERAN_OWNER=false;   // 24 Nov 2026: pegawai hanya boleh melihat rekap hari kasir berjalan
 const pilih=new Set();
 function cocokKasir(t){ return rKasir==="semua" || (siapa(t)||"Tanpa nama")===rKasir; }
 function labelKasir(){ return rKasir==="semua" ? "" : ` · input: ${rKasir}`; }
 function rentangRekap(){
   const today=hariKasir(Date.now());
+  if(!PERAN_OWNER) return {dari:today,sampai:today,label:"Hari ini · "+tglIndo(today),file:today};
   if(rMode==="hari"){ const h=$("tgl").value||today; return {dari:h,sampai:h,label:tglIndo(h),file:h}; }
   if(rMode==="bulan"){ const b=$("rBln").value||today.slice(0,7); return {dari:b+"-01",sampai:b+"-31",label:`${NAMA_BLN[+b.slice(5)-1]} ${b.slice(0,4)}`,file:b}; }
   if(rMode==="tahun"){ const y=$("rThn").value||today.slice(0,4); return {dari:y+"-01-01",sampai:y+"-12-31",label:"Tahun "+y,file:y}; }
@@ -920,7 +923,7 @@ function renderRekap(){
       : st==="belum" ? `<span class="chip belum">belum bayar</span>` : st==="batal" ? `<span class="chip batal">batal</span>`
       : `<span class="chip">${t.metode==="qris"?"QRIS":"tunai"}</span>`;
     const pl = t.pelanggan || {};
-    const plg = (pl.nama||pl.wa) ? (pl.wa ? `<a class="chip plg-chip" href="https://wa.me/${esc(pl.wa)}" target="_blank" rel="noopener">${esc(pl.nama||"Pelanggan")} · WA ${esc(waLokal(pl.wa))}</a>` : `<span class="chip plg-chip">${esc(pl.nama)}</span>`) : "";
+    const plg = PERAN_OWNER && (pl.nama||pl.wa) ? (pl.wa ? `<a class="chip plg-chip" href="https://wa.me/${esc(pl.wa)}" target="_blank" rel="noopener">${esc(pl.nama||"Pelanggan")} · WA ${esc(waLokal(pl.wa))}</a>` : `<span class="chip plg-chip">${esc(pl.nama)}</span>`) : "";
     const s = siapa(t);
     const oleh = s ? `<span class="chip oleh ${t.olehPemilik?"oleh-pem":"oleh-peg"}">input: ${s}</span>` : "";
     const cek = modePilih ? `<input type="checkbox" class="cekTrx" data-id="${t.id}" aria-label="Pilih transaksi ${jam(t.ts)}"${pilih.has(t.id)?" checked":""}>` : "";
@@ -1301,6 +1304,10 @@ function terapkanPeran(){
   const owner = !!(sesi && sesi.peran==="owner");
   bolehHapus = owner;
   $("kartuExport").hidden = !owner; $("tDash").hidden = !owner;
+  if(PERAN_OWNER!==owner){ tampil=[]; if(unsub){ unsub(); unsub=null; } }
+  PERAN_OWNER = owner;
+  if(!owner){ rMode="hari"; document.querySelectorAll("#rFilter button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.rp==="hari")); $("tgl").value=hariKasir(Date.now()); $("rBln").hidden=true; $("rThn").hidden=true; $("rRentang").hidden=true; $("tgl").hidden=false; }
+  $("rFilter").hidden = !owner; $("rTglWrap").hidden = !owner; $("rInfoPeg").hidden = owner;
   aturTombolNotif();
   $("btnKeluar").hidden = !sesi;
   $("btnKeluar").textContent = sesi ? `👤 ${sesi.nama} · Keluar` : "Keluar";
